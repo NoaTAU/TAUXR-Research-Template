@@ -151,7 +151,9 @@ namespace TXRData
             // Legacy head pose (Euler) from Head node
             if (recordingOptions.includeNodes)
             {
-                schemaBuilder.AddMany("Head_Position", new[] { "x", "Height", "Z" });
+                schemaBuilder.Add("Head_Position_x");
+                schemaBuilder.Add("Head_Height");
+                schemaBuilder.Add("Head_Position_z");
                 schemaBuilder.AddMany("Gaze", new[] { "Pitch", "Yaw", "Roll" });
                 schemaBuilder.Add("HeadNodeOrientationValid");
                 schemaBuilder.Add("HeadNodePositionValid");

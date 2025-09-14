@@ -239,6 +239,11 @@ PrefabInstance:
       propertyPath: overlayType
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 127758893875735808, guid: 967af0223632a1649afa8f1a4520fc54,
+        type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 340261313875707779, guid: 967af0223632a1649afa8f1a4520fc54,
         type: 3}
       propertyPath: m_IsActive
@@ -427,12 +432,12 @@ PrefabInstance:
     - target: {fileID: 9179752179251115253, guid: 967af0223632a1649afa8f1a4520fc54,
         type: 3}
       propertyPath: m_ClearFlags
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9179752179251115253, guid: 967af0223632a1649afa8f1a4520fc54,
         type: 3}
       propertyPath: m_BackGroundColor.a
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9179752179251115253, guid: 967af0223632a1649afa8f1a4520fc54,
         type: 3}
@@ -2197,6 +2202,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2375415105064652951, guid: e659db4a8ae844581bad6c905d0de96b,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3099295509836966667, guid: e659db4a8ae844581bad6c905d0de96b,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3724227308610516170, guid: e659db4a8ae844581bad6c905d0de96b,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3789984304783397319, guid: e659db4a8ae844581bad6c905d0de96b,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2252,10 +2272,20 @@ PrefabInstance:
       propertyPath: meshRenderer
       value: 
       objectReference: {fileID: 1214474952}
+    - target: {fileID: 8601626526816456517, guid: e659db4a8ae844581bad6c905d0de96b,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8656074781609814531, guid: e659db4a8ae844581bad6c905d0de96b,
         type: 3}
       propertyPath: m_Name
       value: Eye Tracking Test
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656074781609814531, guid: e659db4a8ae844581bad6c905d0de96b,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8656074781609814531, guid: e659db4a8ae844581bad6c905d0de96b,
         type: 3}
@@ -2486,6 +2516,16 @@ PrefabInstance:
     - target: {fileID: 399961699724422706, guid: 4cba690ca96e6b14fae904cb9db7120b,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3218453330121799869, guid: 4cba690ca96e6b14fae904cb9db7120b,
+        type: 3}
+      propertyPath: saveFilePath
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3218453330121799869, guid: 4cba690ca96e6b14fae904cb9db7120b,
+        type: 3}
+      propertyPath: exportInEditor
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5715946916250606740, guid: 4cba690ca96e6b14fae904cb9db7120b,

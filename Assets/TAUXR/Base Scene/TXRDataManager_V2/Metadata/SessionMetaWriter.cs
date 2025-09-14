@@ -63,11 +63,12 @@ namespace TXRData
 
     public static class SessionMetaWriter
     {
-        private const string FileName = "session_metadata.json";
+        private static string FileName = "session_metadata.json";
         public static string GetPath(string directory) => Path.Combine(directory, FileName);
 
-        public static void WriteInitial(string directory, SessionMetaData meta)
+        public static void WriteInitial(string directory, string fileNamePrefix, SessionMetaData meta)
         {
+            FileName = string.IsNullOrWhiteSpace(fileNamePrefix) ? FileName : $"{fileNamePrefix}_{FileName}";
             Directory.CreateDirectory(directory);
             var json = JsonUtility.ToJson(meta, prettyPrint: true);
             AtomicWrite(GetPath(directory), json);

@@ -67,7 +67,7 @@ namespace TXRData
             {
                 if (!string.IsNullOrWhiteSpace(saveFilePath))
                 {
-                    _rootDir = saveFilePath;
+                    _rootDir = saveFilePath.Replace('\\', '/'); // normalize slashes
                     Directory.CreateDirectory(_rootDir);
                 }
                 else
@@ -112,6 +112,7 @@ namespace TXRData
             if (recordingOptions.includeHands) _continuousCollectors.Add(new OVRHandsCollector());
             if (recordingOptions.includeBody) _continuousCollectors.Add(new OVRBodyCollector());
             if (recordingOptions.includeRecenter) _continuousCollectors.Add(new RecenterCollector());
+            if (recordingOptions.includePerf) _continuousCollectors.Add(new OVRPerformanceCollector());
             if (recordingOptions.customTransformsToRecord != null &&
                 recordingOptions.customTransformsToRecord.Count > 0)
                 _continuousCollectors.Add(new CustomTransformsCollector());
@@ -126,7 +127,7 @@ namespace TXRData
             }
 
             // 7) Custom data tables: set base directory + delimiter once
-            CustomCsvFromDataClass.Initialize(_rootDir, csvDelimiter);
+            CustomCsvFromDataClass.Initialize(_rootDir, csvDelimiter, sessionTime);
         }
 
         private void FixedUpdate()
@@ -272,7 +273,7 @@ namespace TXRData
             catch { /* safe no-op if OVR not present */ }
 
             // 4) Finally write
-            SessionMetaWriter.WriteInitial(GetOutputDirectory(), meta);
+            SessionMetaWriter.WriteInitial(GetOutputDirectory(), SessionTime, meta);
         }
         #endregion
 

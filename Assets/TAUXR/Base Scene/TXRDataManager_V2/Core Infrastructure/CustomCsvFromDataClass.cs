@@ -36,6 +36,7 @@ namespace TXRData
     {
         private static string _baseDirectory = ".";
         private static string _delimiter = ",";
+        private static string _filePrefix = null; // e.g., "2025.09.14_15-08", sessionTime from DataManager
 
         // One writer per table name.
         private static readonly Dictionary<string, CsvRowWriter> _writerByTable = new Dictionary<string, CsvRowWriter>(StringComparer.Ordinal);
@@ -48,13 +49,20 @@ namespace TXRData
         private static readonly Dictionary<string, Type> _definingTypeByTable = new Dictionary<string, Type>(StringComparer.Ordinal);
 
         // Set output directory and delimiter (call once from your DataManager)
-        public static void Initialize(string baseDirectory, string delimiter = ",")
+        public static void Initialize(string baseDirectory, string delimiter = ",", string filePrefix = null)
         {
             if (!string.IsNullOrWhiteSpace(baseDirectory))
                 _baseDirectory = baseDirectory;
 
             if (!string.IsNullOrEmpty(delimiter))
                 _delimiter = delimiter;
+
+            // Optional prefix for all custom CSVs (e.g., sessionTime)
+            if (!string.IsNullOrWhiteSpace(filePrefix))
+            {
+                _filePrefix = SanitizeFileName(filePrefix);
+            }
+
         }
 
         // Write one row for the given data instance.
@@ -113,7 +121,7 @@ namespace TXRData
             _definingTypeByTable.Clear();
         }
 
-        // Create writer + schema for <base>/<TableName>.csv if not already created.
+        // Create writer + schema for <base>/(<prefix>_)?<TableName>.csv if not yet created.
         private static void EnsureTableInitialized(string tableName, Type dataType)
         {
             if (_writerByTable.ContainsKey(tableName))
@@ -145,7 +153,10 @@ namespace TXRData
                 schema.Add(fieldName);
             }
 
-            string path = Path.Combine(_baseDirectory, $"{SanitizeFileName(tableName)}.csv");
+            string safeTable = SanitizeFileName(tableName);
+            string fileName = string.IsNullOrEmpty(_filePrefix) ? $"{safeTable}.csv" : $"{_filePrefix}_{safeTable}.csv";
+            string path = Path.Combine(_baseDirectory, fileName);
+
             CsvRowWriter writer = new CsvRowWriter(path, _delimiter);
 
             _writerByTable[tableName] = writer;

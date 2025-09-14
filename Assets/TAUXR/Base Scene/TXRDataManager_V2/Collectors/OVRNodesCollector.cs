@@ -45,7 +45,7 @@ namespace TXRData
 
             TryIndex(schema, "Head_Position_x", out _idxHeadPosX);
             TryIndex(schema, "Head_Height", out _idxHeadHeight);
-            TryIndex(schema, "Head_Position_Z", out _idxHeadPosZ);
+            TryIndex(schema, "Head_Position_z", out _idxHeadPosZ);
 
             TryIndex(schema, "Gaze_Pitch", out _idxGazePitch);
             TryIndex(schema, "Gaze_Yaw", out _idxGazeYaw);

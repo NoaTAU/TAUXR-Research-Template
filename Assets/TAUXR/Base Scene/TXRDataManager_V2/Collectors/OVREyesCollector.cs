@@ -96,19 +96,27 @@ namespace TXRData
                 }
             }
 
-            if (_writeLegacyGaze && _player != null)
+            if (_writeLegacyGaze)
             {
-                // FocusedObject (string)
-                if (_idxFocusedObject >= 0)
+                if (!_player)
                 {
-                    row.Set(_idxFocusedObject, _player.FocusedObject.name ?? "");
+                    _player = TXRPlayer.Instance;   // try again if TXRPlayer was not ready in Configure
                 }
+                if (_player)                        // only write if player exists
+                {
+                    // FocusedObject (null/destroy-safe)
+                    if (_idxFocusedObject >= 0)
+                    {
+                        Transform focusedObject = _player.FocusedObject;
+                        row.Set(_idxFocusedObject, focusedObject ? focusedObject.name : "");
+                    }
 
-                // Hit point (Vector3)
-                Vector3 hit = _player.EyeGazeHitPosition;
-                SetIfValid(row, _idxHitX, hit.x);
-                SetIfValid(row, _idxHitY, hit.y);
-                SetIfValid(row, _idxHitZ, hit.z);
+                    // Hit point
+                    Vector3 hit = _player.EyeGazeHitPosition;
+                    SetIfValid(row, _idxHitX, hit.x);
+                    SetIfValid(row, _idxHitY, hit.y);
+                    SetIfValid(row, _idxHitZ, hit.z);
+                }
             }
         }
 
