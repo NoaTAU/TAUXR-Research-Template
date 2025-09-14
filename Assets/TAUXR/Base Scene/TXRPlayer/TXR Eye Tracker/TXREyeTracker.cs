@@ -1,6 +1,3 @@
-using OVR.OpenVR;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TXREyeTracker : MonoBehaviour
@@ -21,7 +18,7 @@ public class TXREyeTracker : MonoBehaviour
     private OVREyeGaze _ovrEyeR;
     private Transform _focusedObject;
     private Vector3 _eyeGazeHitPosition;
-    LayerMask _eyeTrackingLayerMask = ~(1 << 7);
+    private LayerMask _eyeTrackingLayerMask = ~(1 << 7);
 
     public void Init()
     {
@@ -52,11 +49,10 @@ public class TXREyeTracker : MonoBehaviour
 
 
         // cast from middle eye
-        _eyePosition = (_rightEye.position + _leftEye.position) / 2;
+        _eyePosition = (_rightEye.position + _leftEye.position) * (0.5f);
 
-        //TODO: try using average of both eyes forward
-        // eye forward is same for both eyes.
-        Vector3 eyeForward = _rightEye.forward;
+        //try using average of both eyes forward
+        Vector3 eyeForward = (_rightEye.forward + _leftEye.forward).normalized;
 
         RaycastHit hit;
         if (Physics.Raycast(_eyePosition, eyeForward, out hit, EYERAYMAXLENGTH, _eyeTrackingLayerMask))
