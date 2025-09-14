@@ -5,6 +5,7 @@
 using NaughtyAttributes;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace TXRData
 {
     public sealed class TXRDataManager_V2 : TXRSingleton<TXRDataManager_V2>
     {
-
+        #region fields and properties
 
         [Header("Editor Export")]
         public bool exportInEditor = false;
@@ -25,7 +26,7 @@ namespace TXRData
         //public string outputFolderName = "TXR_Logs";
         private string sessionTime;
         public string SessionTime => sessionTime; // read-only property
-        public bool appendIfFilesExist = false;
+        private bool appendIfFilesExist = false;
         public string csvDelimiter = ",";
 
         [Header("What to record (ContinuousData)")]
@@ -53,9 +54,11 @@ namespace TXRData
         private readonly List<IContinuousCollector> _continuousCollectors = new List<IContinuousCollector>();
         private OVRFaceCollector _faceCollector;
 
+        #endregion
+
+        #region unity lifecycle
         private void Awake()
         {
-
             // 0) session time suffix
             sessionTime = DateTime.UtcNow.ToString("yyyy.MM.dd_HH-mm");
 
@@ -79,15 +82,17 @@ namespace TXRData
                 //Directory.CreateDirectory(_rootDir);
             }
 
+            // 2) Metadata
+            WriteMetadata();
 
-            // 2) Build schemas
+            // 3) Build schemas
             var cont = SchemaFactories.BuildContinuousDataV2(recordingOptions);  // (schema, counts, flags)
             _continuousSchema = cont.schema;
 
             var face = SchemaFactories.BuildFaceExpressionsV2();                 // (schema, counts)
             _faceSchema = face.schema;
 
-            // 3) Writers
+            // 4) Writers
             string contPath = Path.Combine(_rootDir, $"{sessionTime}_ContinuousData.csv");
             _continuousWriter = new CsvRowWriter(contPath, csvDelimiter, null, appendIfFilesExist);
 
@@ -97,11 +102,11 @@ namespace TXRData
                 _faceWriter = new CsvRowWriter(facePath, csvDelimiter, null, appendIfFilesExist);
             }
 
-            // 4) Row buffers
+            // 5) Row buffers
             _continuousRow = new RowBuffer(_continuousSchema);
             _faceRow = recordFaceExpressions ? new RowBuffer(_faceSchema) : null;
 
-            // 5) Collectors for ContinuousData
+            // 6) Initialize Collectors for ContinuousData
             if (recordingOptions.includeNodes) _continuousCollectors.Add(new OVRNodesCollector());
             if (recordingOptions.includeEyes) _continuousCollectors.Add(new OVREyesCollector());
             if (recordingOptions.includeHands) _continuousCollectors.Add(new OVRHandsCollector());
@@ -120,8 +125,8 @@ namespace TXRData
                 _faceCollector.Configure(_faceSchema, recordingOptions);
             }
 
-            // 6) Custom data tables: set base directory + delimiter once
-            CustomCsvFromDataClass.Initialize(_rootDir, csvDelimiter);           // :contentReference[oaicite:8]{index=8}
+            // 7) Custom data tables: set base directory + delimiter once
+            CustomCsvFromDataClass.Initialize(_rootDir, csvDelimiter);
         }
 
         private void FixedUpdate()
@@ -169,6 +174,9 @@ namespace TXRData
             try { CustomCsvFromDataClass.CloseAll(); } catch { }
         }
 
+        #endregion
+
+        #region custom DataClass logging
         // ---------- minimal API for researchers ----------
 
         // Create & write a row to <TableName>.csv using a custom data class instance.
@@ -187,6 +195,88 @@ namespace TXRData
             CustomCsvFromDataClass.Write(inst);
         }
 
+        #endregion
+
         public string GetOutputDirectory() => _rootDir;
+
+        #region METADATA
+
+        private void WriteMetadata()
+        {
+            // 1) Build the object
+            var meta = new SessionMetaData
+            {
+                // Identity / timing
+                session_id = SessionTime,
+                utc_start_iso8601 = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                device_utc_offset = TimeZoneInfo.Local.BaseUtcOffset.ToString(),
+                sampling_mode = "FixedUpdate",
+                timeScale = Time.timeScale,
+                fixedDeltaTime = Time.fixedDeltaTime,
+                rotation_units = "degrees",
+                rotation_euler_order = "XYZ",
+
+                // Platform / versions
+                platform = Application.platform.ToString(),
+                unity_version = Application.unityVersion,
+
+                // Feature flags inferred from manager settings
+                eyes_enabled = recordingOptions.includeEyes,
+                hands_enabled = recordingOptions.includeHands,
+                body_enabled = recordingOptions.includeBody,
+                face_enabled = recordFaceExpressions,
+                controllers_enabled = true, // update if you actually gate controllers
+            };
+
+            // 2) Build info (player build) or editor fallback
+            var bi = BuildInfoLoader.Instance != null ? BuildInfoLoader.Instance.Current : null;
+
+#if UNITY_EDITOR
+            // In Editor we likely don’t have a real build_info.json—stamp an editor ID
+            meta.build_id = $"EDITOR_{SessionTime}";
+            meta.utc_build_iso8601 = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+            meta.git_commit = "N/A";
+            // If AutoBuildInfo generated something for editor you can still prefer it:
+            if (bi != null && !string.IsNullOrWhiteSpace(bi.build_id))
+            {
+                meta.build_id = bi.build_id;
+                meta.utc_build_iso8601 = bi.utc_build_iso8601;
+                meta.unity_version = string.IsNullOrEmpty(bi.unity) ? meta.unity_version : bi.unity;
+                meta.git_commit = bi.git_commit;
+            }
+#else
+            // On device / player builds we expect StreamingAssets/build_info.json
+            if (bi != null)
+            {
+                meta.build_id          = bi.build_id;
+                meta.utc_build_iso8601 = bi.utc_build_iso8601;
+                meta.unity_version     = string.IsNullOrEmpty(bi.unity) ? meta.unity_version : bi.unity;
+                meta.git_commit        = bi.git_commit;
+            }
+            else
+            {
+                // Fallback if missing
+                meta.build_id          = $"NO_BUILDINFO_{SessionTime}";
+                meta.utc_build_iso8601 = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+                meta.git_commit        = "unknown";
+            }
+#endif
+
+            // 3) (Optional) sprinkle OVR/OVRPlugin versions if available; wrap in try to avoid hard deps
+            try
+            {
+                meta.ovrplugin_wrapper_version = OVRPlugin.wrapperVersion.ToString();
+                meta.ovrplugin_runtime_version = OVRPlugin.version.ToString();
+
+            }
+            catch { /* safe no-op if OVR not present */ }
+
+            // 4) Finally write
+            SessionMetaWriter.WriteInitial(GetOutputDirectory(), meta);
+        }
+        #endregion
+
     }
+
+
 }
