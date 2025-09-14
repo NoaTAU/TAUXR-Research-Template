@@ -108,10 +108,11 @@ The system is made of small scripts grouped by role.
 
 A) Orchestrator
 ---------------
-- DataManager_V2.cs  
+- TXRDataManager_V2.cs  
   The conductor. Sets up schemas, opens CSV files,
-  and calls collectors every physics tick. On quit,
-  closes files and writes metadata.
+  and calls collectors every physics tick. 
+  owns all the CsvRowWriters and calls them each frame.
+  On quit, closes files and writes metadata.
 
 B) Core Infrastructure
 -----------------------
@@ -122,8 +123,6 @@ work. You don’t normally edit them.
   quick lookup by name or index.
 - RowBuffer.cs: staging area for one row of data.
 - CsvRowWriter.cs: writes one CSV (header + rows).
-- CsvFileManager.cs: manages multiple CsvRowWriters
-  (continuous, face, custom tables).
 - CustomCsvFromDataClass.cs: lets you write a custom
   data class straight to CSV automatically.
 
@@ -131,7 +130,7 @@ C) Collectors
 -------------
 Collectors pull data from the VR system and fill rows.
 - OVRNodesCollector.cs: device nodes (head, hands, etc.)
-- OVREyesCollector.cs: eye gaze + raycast
+- OVREyesCollector.cs: eye gazes (angles, valid, confidence, shared time) + focused object & hit point via TXRPlayer
 - OVRHandsCollector.cs: hand tracking, bones, confidence
 - OVRBodyCollector.cs: body joints and calibration
 - OVRFaceCollector.cs: face expression weights + validity
@@ -151,13 +150,12 @@ D) Metadata
 
 Data collection flow:
 - Collectors fill a RowBuffer with values for that tick.
-- RowBuffer flushes to CsvFileManager.
-- CsvFileManager routes it to the right CsvRowWriter.
+- RowBuffer flushes to CsvRowWriter.
 - CsvRowWriter writes it to disk (CSV file).
 - Metadata scripts run in parallel, writing JSONs.
 
 So the chain is:
-Collectors → RowBuffer → CsvFileManager → CsvRowWriter → CSV files
+Collectors → RowBuffer → CsvRowWriter → CSV files
 
 
 4. FAQ
@@ -172,7 +170,7 @@ A: See data_sources_README.txt for ContinuousData and
    FaceExpressions. Custom tables use your class fields.
 
 Q: How do I add a new event table?  
-A: Create a new data class that inheritd rom CustomDataClass
+A: Create a new data class that inherits from CustomDataClass
    with TableName and fields,
    then add a reporter function that instantiates it
    and calls CustomCsvFromDataClass.Write().
@@ -197,5 +195,7 @@ A: ContinuousData.csv and FaceExpressions.csv are logged
 Q: What if Unity crashes—will I lose data?  
 A: No, CsvRowWriter flushes each line to disk so files
    stay consistent.
+
+Note: Enum/flag fields are written as strings (e.g., "High", "Calibrating", "Tracked|OrientationValid") for readability.
 
 =====================================================

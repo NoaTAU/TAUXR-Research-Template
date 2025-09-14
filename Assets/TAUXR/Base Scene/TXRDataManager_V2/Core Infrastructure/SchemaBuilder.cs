@@ -176,10 +176,9 @@ namespace TXRData
                 schemaBuilder.Add("LeftEye_Yaw");
                 schemaBuilder.Add("LeftEye_IsValid");
                 schemaBuilder.Add("LeftEye_Confidence");
-                schemaBuilder.Add("LeftEye_Time");
                 schemaBuilder.Add("RightEye_IsValid");
                 schemaBuilder.Add("RightEye_Confidence");
-                schemaBuilder.Add("RightEye_Time");
+                schemaBuilder.Add("Eyes_Time");
             }
 
             // Recenter flags
