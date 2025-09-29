@@ -39,7 +39,7 @@ namespace TXRData
             if (schema == null) throw new ArgumentNullException(nameof(schema));
             if (options == null) options = new RecordingOptions();
 
-            _includePerf = options.includePerf;
+            _includePerf = options.includePerformance;
             if (!_includePerf) return;
 
             TryIndex(schema, "AppMotionToPhotonLatency", out _idxMitionPhotonLatency);

@@ -12,7 +12,7 @@ namespace TXRData
     public sealed class OVRNodesCollector : IContinuousCollector
     {
         public string CollectorName => "OVRNodesCollector";
-        private const Step SampleStep = Step.Physics;
+        private const Step SampleStep = OvrSampling.StepDefault;
 
         // Legacy head pose block
         private int _idxHeadPosX = -1, _idxHeadHeight = -1, _idxHeadPosZ = -1;

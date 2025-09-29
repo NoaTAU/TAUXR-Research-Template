@@ -112,7 +112,7 @@ namespace TXRData
             if (recordingOptions.includeHands) _continuousCollectors.Add(new OVRHandsCollector());
             if (recordingOptions.includeBody) _continuousCollectors.Add(new OVRBodyCollector());
             if (recordingOptions.includeRecenter) _continuousCollectors.Add(new RecenterCollector());
-            if (recordingOptions.includePerf) _continuousCollectors.Add(new OVRPerformanceCollector());
+            if (recordingOptions.includePerformance) _continuousCollectors.Add(new OVRPerformanceCollector());
             if (recordingOptions.customTransformsToRecord != null &&
                 recordingOptions.customTransformsToRecord.Count > 0)
                 _continuousCollectors.Add(new CustomTransformsCollector());

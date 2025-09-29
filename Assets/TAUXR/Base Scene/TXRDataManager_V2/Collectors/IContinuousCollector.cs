@@ -21,6 +21,11 @@ namespace TXRData
         void Collect(RowBuffer row, float timeSinceStartup);
     }
 
+    public static class OvrSampling // shared OVRPlugin sampling parameters
+    {
+        public const OVRPlugin.Step StepDefault = OVRPlugin.Step.Render; // Step.physics is deprecated, render is default
+        public const int LatestFrame = -1; // default parameter to get the latest available frame
+    }
 
     public static class CollectorUtils
     {

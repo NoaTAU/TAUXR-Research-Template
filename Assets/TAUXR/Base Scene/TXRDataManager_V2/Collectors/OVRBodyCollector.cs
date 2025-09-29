@@ -10,7 +10,7 @@ namespace TXRData
     public sealed class OVRBodyCollector : IContinuousCollector
     {
         public string CollectorName => "OVRBodyCollector";
-        private const Step SampleStep = Step.Physics;   // Plugin maps Physics -> Render when needed
+        private const Step SampleStep = OvrSampling.StepDefault;   // Plugin maps Physics -> Render when needed
         private const BodyJointSet JointSet = BodyJointSet.FullBody; //UpperBody or FullBody if you enable it in options
 
         private bool _includeBody = false;

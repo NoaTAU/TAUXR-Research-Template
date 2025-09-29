@@ -35,7 +35,7 @@ namespace TXRData
         public string sampling_mode = "FixedUpdate";
         public float fixedDeltaTime = 0f;
         public float timeScale = 1f;
-        public string ovr_step_name = "Physics";        // "Physics" or "Render"
+        public string ovr_step_name = OvrSampling.StepDefault.ToString();        // "Physics" or "Render"
         public int ovr_step_value = 0;                  // 0 or -1
 
         // ---- Schema / rotation ----

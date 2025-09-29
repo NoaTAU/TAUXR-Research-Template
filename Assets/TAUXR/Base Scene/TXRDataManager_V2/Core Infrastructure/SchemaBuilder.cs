@@ -84,7 +84,7 @@ namespace TXRData
         public bool includeEyes = true;         // Dedicated eye API (pitch/yaw/valid/time)
         public bool includeHands = true;        // Hand skeleton arrays
         public bool includeBody = true;         // Body skeleton arrays
-        public bool includePerf = true;         // AppMotionToPhotonLatency
+        public bool includePerformance = true;         // AppMotionToPhotonLatency
         public bool includeGaze = true;         // FocusedObject, EyeGazeHitPosition
         public bool includeRecenter = true;     // shouldRecenter, recenterEvent
 
@@ -262,7 +262,7 @@ namespace TXRData
             }
 
             // Perf
-            if (recordingOptions.includePerf)
+            if (recordingOptions.includePerformance)
                 schemaBuilder.Add("AppMotionToPhotonLatency");
 
             // Custom transforms (from inspector)

@@ -11,7 +11,7 @@ namespace TXRData
     public sealed class OVRHandsCollector : IContinuousCollector
     {
         public string CollectorName => "OVRHandsCollector";
-        private const Step SampleStep = Step.Physics;
+        private const Step SampleStep = OvrSampling.StepDefault;
 
         private struct HandCols
         {

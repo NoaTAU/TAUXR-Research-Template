@@ -12,8 +12,8 @@ namespace TXRData
     public sealed class OVRFaceCollector : IContinuousCollector
     {
         public string CollectorName => "OVRFaceCollector";
-        private const Step SampleStep = Step.Physics;
-        private const int LatestFrame = 0; // latest available face frame
+        private const Step SampleStep = OvrSampling.StepDefault;
+        private const int LatestFrame = OvrSampling.LatestFrame;
 
         // Column indices
         private int _idxTimeSinceStartup = -1;  // "timeSinceStartup"
@@ -28,6 +28,8 @@ namespace TXRData
         // Region confidences (two values: Upper / Lower)
         private int _idxRegionUpper = -1;
         private int _idxRegionLower = -1;
+
+        private float[] faceWeightsOldAPi = new float[(int)OVRFaceExpressions.FaceExpression.Max];
 
         public void Configure(ColumnIndex schema, RecordingOptions options)
         {
@@ -88,6 +90,9 @@ namespace TXRData
             // Plugin form: GetFaceState2(step, frameIndex, ref FaceState)
             bool ok = GetFaceState2(SampleStep, LatestFrame, ref face);
             if (!ok) return;
+
+            //old api comparison (test - TODO delete)
+            faceWeightsOldAPi = TXRPlayer.Instance.OVRFace.ToArray();
 
             // Base
             SetIfValid(row, _idxTimeSinceStartup, timeSinceStartup);

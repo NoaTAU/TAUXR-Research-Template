@@ -11,8 +11,8 @@ namespace TXRData
     public sealed class OVREyesCollector : IContinuousCollector
     {
         public string CollectorName => "OVREyesCollector";
-        private const Step SampleStep = Step.Physics;
-        private const int LatestFrame = 0;
+        private const Step SampleStep = OvrSampling.StepDefault;
+        private const int LatestFrame = OvrSampling.LatestFrame;
 
         // TXRPlayer reference (assigned to TXRPlayer.Instance in Configure)
         private TXRPlayer _player;
