@@ -1,4 +1,3 @@
-// SessionMetaWriter.cs (updated)
 // Writes session_metadata.json with detected skeleton sizes and flags.
 
 using System;
@@ -49,6 +48,10 @@ namespace TXRData
         public bool hands_enabled;
         public bool eyes_enabled;
         public bool controllers_enabled;
+
+        // where the per-hand skeleton JSONs are written
+        public string left_hand_skeleton_json = "";
+        public string right_hand_skeleton_json = "";
 
         // ---- Detected skeleton sizes (for traceability) ----
         public int detected_hand_bones = 0;

@@ -2,12 +2,15 @@
 // Builds schemas, opens CSVs, runs collectors every FixedUpdate.
 // Researchers use: LogCustom(...) and the inspector list of custom transforms.
 
+using Cysharp.Threading.Tasks;
 using NaughtyAttributes;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using UnityEngine;
+using static OVRPlugin;
+using static TXRData.BuildInfoLoader;
 
 
 namespace TXRData
@@ -23,7 +26,6 @@ namespace TXRData
         public string saveFilePath;  // if null/empty, falls back to tmp
 
         [Header("Output")]
-        //public string outputFolderName = "TXR_Logs";
         private string sessionTime;
         public string SessionTime => sessionTime; // read-only property
         private bool appendIfFilesExist = false;
@@ -85,14 +87,17 @@ namespace TXRData
             // 2) Metadata
             WriteMetadata();
 
-            // 3) Build schemas
+            // 3) StartBodyTracking if needed
+            //Moved To Start() 
+
+            // 4) Build schemas
             var cont = SchemaFactories.BuildContinuousDataV2(recordingOptions);  // (schema, counts, flags)
             _continuousSchema = cont.schema;
 
             var face = SchemaFactories.BuildFaceExpressionsV2();                 // (schema, counts)
             _faceSchema = face.schema;
 
-            // 4) Writers
+            // 5) Writers
             string contPath = Path.Combine(_rootDir, $"{sessionTime}_ContinuousData.csv");
             _continuousWriter = new CsvRowWriter(contPath, csvDelimiter, null, appendIfFilesExist);
 
@@ -102,11 +107,11 @@ namespace TXRData
                 _faceWriter = new CsvRowWriter(facePath, csvDelimiter, null, appendIfFilesExist);
             }
 
-            // 5) Row buffers
+            // 6) Row buffers
             _continuousRow = new RowBuffer(_continuousSchema);
             _faceRow = recordFaceExpressions ? new RowBuffer(_faceSchema) : null;
 
-            // 6) Initialize Collectors for ContinuousData
+            // 7) Initialize Collectors for ContinuousData
             if (recordingOptions.includeNodes) _continuousCollectors.Add(new OVRNodesCollector());
             if (recordingOptions.includeEyes) _continuousCollectors.Add(new OVREyesCollector());
             if (recordingOptions.includeHands) _continuousCollectors.Add(new OVRHandsCollector());
@@ -126,8 +131,16 @@ namespace TXRData
                 _faceCollector.Configure(_faceSchema, recordingOptions);
             }
 
-            // 7) Custom data tables: set base directory + delimiter once
+            // 8) Custom data tables: set base directory + delimiter once
             CustomCsvFromDataClass.Initialize(_rootDir, csvDelimiter, sessionTime);
+        }
+
+        private async void Start()
+        {
+            if (recordingOptions.includeBody)
+            {
+                await StartBodyTrackingAsync(BodyJointSet.FullBody, BodyTrackingFidelity2.High);
+            }
         }
 
         private void FixedUpdate()
@@ -177,6 +190,36 @@ namespace TXRData
 
         #endregion
 
+        #region Tracking Initializing 
+        public async UniTask StartBodyTrackingAsync(BodyJointSet jointSet = BodyJointSet.FullBody,
+                                                   BodyTrackingFidelity2 fidelity = BodyTrackingFidelity2.High)
+        {
+            // Wait a couple of frames so OVR/Link fully initializes
+            await UniTask.Yield(PlayerLoopTiming.Update);
+            await UniTask.Yield(PlayerLoopTiming.Update);
+
+            Debug.Log($"[DataManager_V2] Body Tracking Supported={OVRPlugin.bodyTrackingSupported}");
+
+            // Request fidelity first, then try v2 start, then fallback to legacy start
+            OVRPlugin.RequestBodyTrackingFidelity(fidelity);
+            bool started = OVRPlugin.StartBodyTracking2(jointSet);
+            if (!started)
+                started = OVRPlugin.StartBodyTracking();
+
+            // Wait up to ~2 seconds for the runtime to enable body tracking
+            float timeout = 2f;
+            float elapsed = 0f;
+
+            while (elapsed < timeout && !OVRPlugin.bodyTrackingEnabled)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update);
+                elapsed += Time.unscaledDeltaTime;
+            }
+
+            Debug.Log($"[DataManager_V2] Body Tracking started={started}, Body Tracking enabled={OVRPlugin.bodyTrackingEnabled}, set={jointSet}, fid={fidelity}");
+        }
+        #endregion
+
         #region custom DataClass logging
         // ---------- minimal API for researchers ----------
 
@@ -204,33 +247,63 @@ namespace TXRData
 
         private void WriteMetadata()
         {
+
+            // 0) Capture skeletons once (if hands are enabled)
+            OVRPlugin.Skeleton2 leftSkel = default, rightSkel = default;
+            bool haveLeft = recordingOptions.includeHands && OVRPlugin.GetSkeleton2(OVRPlugin.SkeletonType.HandLeft, ref leftSkel);
+            bool haveRight = recordingOptions.includeHands && OVRPlugin.GetSkeleton2(OVRPlugin.SkeletonType.HandRight, ref rightSkel);
+
             // 1) Build the object
             var meta = new SessionMetaData
             {
-                // Identity / timing
-                session_id = SessionTime,
-                utc_start_iso8601 = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                // session and identity
+                session_id = sessionTime,
+                utc_start_iso8601 = DateTime.UtcNow.ToString("o"),
                 device_utc_offset = TimeZoneInfo.Local.BaseUtcOffset.ToString(),
-                sampling_mode = "FixedUpdate",
-                timeScale = Time.timeScale,
-                fixedDeltaTime = Time.fixedDeltaTime,
-                rotation_units = "degrees",
-                rotation_euler_order = "XYZ",
-
-                // Platform / versions
                 platform = Application.platform.ToString(),
                 unity_version = Application.unityVersion,
 
-                // Feature flags inferred from manager settings
+                // feature toggles
                 eyes_enabled = recordingOptions.includeEyes,
                 hands_enabled = recordingOptions.includeHands,
                 body_enabled = recordingOptions.includeBody,
                 face_enabled = recordFaceExpressions,
-                controllers_enabled = true, // update if you actually gate controllers
+                controllers_enabled = true, // TODO update if we actually gate controllers
+
+                // OVR sampling (document the choice)
+                ovr_step_name = OvrSampling.StepDefault.ToString(),
+                ovr_step_value = (int)OvrSampling.StepDefault,
+
+                // sampeling timing
+                sampling_mode = "FixedUpdate",
+                timeScale = Time.timeScale,
+                fixedDeltaTime = Time.fixedDeltaTime,
+
+                // for rotation conversion
+                rotation_units = "degrees",
+                rotation_euler_order = "XYZ",
+
             };
 
+
+            // fill detected_hand_bones if we have a skeleton
+            if (haveLeft) meta.detected_hand_bones = Math.Max(meta.detected_hand_bones, (int)leftSkel.NumBones);
+            if (haveRight) meta.detected_hand_bones = Math.Max(meta.detected_hand_bones, (int)rightSkel.NumBones);
+
+            // 2) Write per-hand skeleton JSONs (if available)
+            if (haveLeft)
+            {
+                meta.left_hand_skeleton_json = Path.Combine(_rootDir, $"{sessionTime}_HandSkeleton_Left.json");
+                //WriteHandSkeletonJson(meta.left_hand_skeleton_json, leftSkel);
+            }
+            if (haveRight)
+            {
+                meta.right_hand_skeleton_json = Path.Combine(_rootDir, $"{sessionTime}_HandSkeleton_Right.json");
+                //riteHandSkeletonJson(meta.right_hand_skeleton_json, rightSkel);
+            }
+
             // 2) Build info (player build) or editor fallback
-            var bi = BuildInfoLoader.Instance != null ? BuildInfoLoader.Instance.Current : null;
+            BuildInfo bi = BuildInfoLoader.Instance != null ? BuildInfoLoader.Instance.Current : null;
 
 #if UNITY_EDITOR
             // In Editor we likely don’t have a real build_info.json—stamp an editor ID
@@ -280,4 +353,44 @@ namespace TXRData
     }
 
 
+
+
+    [Serializable]
+    public class HandSkeletonMeta
+    {
+        public string skeleton_type;        // "HandLeft" or "HandRight"
+        public int num_bones;
+        public int[] parent_index;         // length = num_bones
+        public string[] bone_id;            // human readable, optional
+        public float[][] bind_pos;          // [i][x,y,z]
+        public float[][] bind_rot;          // [i][x,y,z,w]
+
+
+        public static void WriteHandSkeletonJson(string path, OVRPlugin.Skeleton2 sk)
+        {
+            var m = new HandSkeletonMeta
+            {
+                skeleton_type = sk.Type.ToString(),
+                num_bones = (int)sk.NumBones,
+                parent_index = new int[sk.NumBones],
+                bone_id = new string[sk.NumBones],
+                bind_pos = new float[sk.NumBones][],
+                bind_rot = new float[sk.NumBones][]
+            };
+
+            for (int i = 0; i < sk.NumBones; i++)
+            {
+                var b = sk.Bones[i];
+                m.parent_index[i] = b.ParentBoneIndex;
+                m.bone_id[i] = b.Id.ToString();
+                m.bind_pos[i] = new[] { b.Pose.Position.x, b.Pose.Position.y, b.Pose.Position.z };
+                m.bind_rot[i] = new[] { b.Pose.Orientation.x, b.Pose.Orientation.y, b.Pose.Orientation.z, b.Pose.Orientation.w };
+            }
+
+            var json = JsonUtility.ToJson(m, true);
+            File.WriteAllText(path, json);
+        }
+    }
 }
+
+

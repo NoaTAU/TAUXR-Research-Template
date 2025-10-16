@@ -158,15 +158,18 @@ namespace TXRData
             // Bone arrays
             int positionsCount = handState.BonePositions != null ? handState.BonePositions.Length : 0;
             int rotationsCount = handState.BoneRotations != null ? handState.BoneRotations.Length : 0;
-            int limit = Math.Min(_handBoneCount, Math.Min(positionsCount, rotationsCount));
 
-            for (int i = 0; i < limit; i++)
+            for (int i = 0; i < positionsCount; i++)
             {
                 Vector3f bonePositions = handState.BonePositions[i];
                 SetIfValid(row, cols.BonePosX[i], bonePositions.x);
                 SetIfValid(row, cols.BonePosY[i], bonePositions.y);
                 SetIfValid(row, cols.BonePosZ[i], bonePositions.z);
 
+            }
+
+            for (int i = 0; i < rotationsCount; i++)
+            {
                 Quatf boneRotations = handState.BoneRotations[i];
                 SetIfValid(row, cols.BoneQx[i], boneRotations.x);
                 SetIfValid(row, cols.BoneQy[i], boneRotations.y);

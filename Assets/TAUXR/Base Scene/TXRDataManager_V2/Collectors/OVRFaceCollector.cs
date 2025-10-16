@@ -91,11 +91,7 @@ namespace TXRData
             bool ok = GetFaceState2(SampleStep, LatestFrame, ref face);
             if (!ok) return;
 
-            //old api comparison (test - TODO delete)
-            faceWeightsOldAPi = TXRPlayer.Instance.OVRFace.ToArray();
-
             // Base
-            SetIfValid(row, _idxTimeSinceStartup, timeSinceStartup);
             SetIfValid(row, _idxFaceTime, face.Time);                 // double
             SetIfValid(row, _idxFaceStatus, face.Status.IsValid);     // bool
 

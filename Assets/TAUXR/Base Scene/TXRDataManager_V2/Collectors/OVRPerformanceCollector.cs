@@ -9,13 +9,13 @@ namespace TXRData
     {
         public string CollectorName => "OVRPerformanceCollector";
         private bool _includePerf = false;
-        private int _idxMitionPhotonLatency = -1; // AppMotionToPhotonLatency
+        private int _idxMotionPhotonLatency = -1; // AppMotionToPhotonLatency
 
 
         public void Collect(RowBuffer row, float timeSinceStartup)
         {
             if (!_includePerf) return;
-            if (_idxMitionPhotonLatency < 0) return;
+            if (_idxMotionPhotonLatency < 0) return;
 
             float motionToPhoton = float.NaN;
 
@@ -31,7 +31,7 @@ namespace TXRData
                 motionToPhoton = stats.FrameStats[last].AppMotionToPhotonLatency; // seconds
             }
 
-            row.Set(_idxMitionPhotonLatency, motionToPhoton);
+            row.Set(_idxMotionPhotonLatency, motionToPhoton);
         }
 
         public void Configure(ColumnIndex schema, RecordingOptions options)
@@ -42,7 +42,7 @@ namespace TXRData
             _includePerf = options.includePerformance;
             if (!_includePerf) return;
 
-            TryIndex(schema, "AppMotionToPhotonLatency", out _idxMitionPhotonLatency);
+            TryIndex(schema, "AppMotionToPhotonLatency", out _idxMotionPhotonLatency);
 
 
 
