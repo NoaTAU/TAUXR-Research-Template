@@ -400,6 +400,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8954803733871886553, guid: 967af0223632a1649afa8f1a4520fc54,
+        type: 3}
+      propertyPath: _skeletonType
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 9179752177440450417, guid: 967af0223632a1649afa8f1a4520fc54,
         type: 3}
       propertyPath: m_Name

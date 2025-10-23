@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 
 public enum HandType { Left, Right, None, Any }
-public enum FingerType { Thumb = 19, Index = 20, Middle = 21, Ring = 22, Pinky = 23 }
+public enum FingerType { Thumb = 5, Index = 10, Middle = 15, Ring = 20, Pinky = 25 } // OpenXR hand bone indices for tips
 
 public class TXRHand : MonoBehaviour
 {

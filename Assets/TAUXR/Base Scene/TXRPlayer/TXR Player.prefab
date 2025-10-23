@@ -625,7 +625,7 @@ PrefabInstance:
     - target: {fileID: 1976482885011358895, guid: 8abf5cb7b83a7aa4e9a6b7dcf38d4483,
         type: 3}
       propertyPath: fingerIndex
-      value: 23
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2132758352571177844, guid: 8abf5cb7b83a7aa4e9a6b7dcf38d4483,
         type: 3}
@@ -925,7 +925,7 @@ PrefabInstance:
     - target: {fileID: 1976482885011358895, guid: 8abf5cb7b83a7aa4e9a6b7dcf38d4483,
         type: 3}
       propertyPath: fingerIndex
-      value: 23
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2428607945537420595, guid: 8abf5cb7b83a7aa4e9a6b7dcf38d4483,
         type: 3}

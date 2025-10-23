@@ -13,7 +13,7 @@ public class Pincher : MonoBehaviour
     }
 
     private OVRSkeleton _ovrSkeleton;
-    private const int INDEX_I = 20, THUMB_I = 19;
+    private const int INDEX_I = 10, THUMB_I = 5; // OpenXR hand bone indices: IndexTip=10, ThumbTip=5
     private float _pinchStrength;
 
     private float _pinchDistance;
